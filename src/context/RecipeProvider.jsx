@@ -1,61 +1,72 @@
 //!context alanı create edelim
 
-import axios from "axios";
 import { useState } from "react";
 import { createContext } from "react";
+import axios from "axios";
+export const RecipeContext = createContext();
 
-export const RecipeContext=createContext()
+const APP_ID = "bfbb3efc";
+const APP_KEY = "43faeee790f26cd82b28050d3031619d";
 
-const RecipeProvider=({children})=>{
+const RecipeProvider = ({ children }) => {
+  //! login ve privaterouter sayfalarında gerekli usestateleri açtık
 
-//! login ve privaterouter sayfalarında gerekli usestateleri açtık
+  const [name, setName] = useState(localStorage.getItem("username") || "");
+  const [password, setPassword] = useState(
+    localStorage.getItem("password") || ""
+  );
 
-const[name,setName]=useState(localStorage.getItem("username") || "" )
-const[password,setPassword]=useState(localStorage.getItem("password") ||"" )
+  //! Home, header, recipecard da gerekli olan veriler
 
-// Home,header,recipecard da gerekli olan veriler.
+  const [recipes, setRecipes] = useState([]);
+  const [query, setQuery] = useState("");
+  const [mealType, setMealType] = useState("Breakfast");
 
-const APP_ID = "3b0240bd"
-const APP_KEY = "88ceed6f2912b5603c6bc9b0ad600212"
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
 
-const [recipes,setRecipes] = useState([])
-const [query,setQuery] = useState("")
-const [mealType,setMealType] = useState("Breakfast")
+  const url = `https://api.edamam.com/search?q=${query}&app_id=${APP_ID}&app_key=${APP_KEY}&mealType=${mealType}`;
 
-const[loading,setLoading]=useState(false)
-const[error,setError]=useState(false)
+  const getData = async () => {
+    setLoading(true);
 
-const url = `https://api.edamam.com/search?q=${query}&app_id=${APP_ID}&app_key=${APP_KEY}&mealType=${mealType}`; 
+    try {
+      const { data } = await axios.get(url);
 
-const getData=async()=>{
-const {data} = await axios.get(url)
+      setRecipes(data.hits);
 
-setRecipes(data.hits)
+    } catch (error) {
+      setError(true);
+    }finally{
+      setLoading(false);
 
-console.log(recipes);
+    }
+  };
 
+if(error){
+  return <p> Something Went Wrong....</p>
 }
-// getData()
 
-return(
-
-  <RecipeContext.Provider value={{
-    name,
-    password,
-    setName,
-    setPassword,
-    setQuery,
-    setMealType,
-    recipes,
-    getData
-  }}>
-
-    {children}
-  </RecipeContext.Provider>
-)
-
-
-
+if(loading){
+  return <p> LOADINGGGG.....</p>
 }
+
+  return (
+    <RecipeContext.Provider
+      value={{
+        name,
+        password,
+        setName,
+        setPassword,
+        setQuery,
+        setMealType,
+        recipes,
+        getData,
+      }}
+    >
+      {children}
+    </RecipeContext.Provider>
+  );
+};
 
 export default RecipeProvider;
